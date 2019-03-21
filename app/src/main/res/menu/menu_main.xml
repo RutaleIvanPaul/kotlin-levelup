@@ -5,8 +5,10 @@
     <item android:title="Next" android:orderInCategory="100" android:id="@+id/action_next"
           app:showAsAction="ifRoom|withText"
           android:icon="@drawable/ic_forward_black_24dp"/>
+    <item android:title="Save" android:orderInCategory="101" android:id="@+id/action_save"
+          android:icon="@drawable/ic_save_black_24dp" app:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/action_settings"
           android:title="@string/action_settings"
-          android:orderInCategory="101"
+          android:orderInCategory="102"
           app:showAsAction="never"/>
 </menu>
