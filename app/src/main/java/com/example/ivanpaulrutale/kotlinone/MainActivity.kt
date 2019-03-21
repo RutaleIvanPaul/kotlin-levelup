@@ -1,13 +1,18 @@
 package com.example.ivanpaulrutale.kotlinone
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
+import android.widget.EditText
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.android.synthetic.main.content_main.view.*
 
 class MainActivity : AppCompatActivity() {
     private var notePosition = POSITION_NOT_SET
@@ -22,8 +27,7 @@ class MainActivity : AppCompatActivity() {
         if( notePosition!= POSITION_NOT_SET)
             displayNote()
         else{
-            DataManager.notes.add(NoteInfo())
-            notePosition = DataManager.notes.lastIndex
+            createNewNote()
         }
 
         val adapterCourses = ArrayAdapter<CourseInfo>(this,
@@ -32,6 +36,29 @@ class MainActivity : AppCompatActivity() {
         adapterCourses.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerCourses.adapter = adapterCourses
 
+        val textBoxes = arrayListOf<EditText>(editNoteText,editNoteTitle)
+
+        for(index in 0..textBoxes.lastIndex){
+            textBoxes[index].addTextChangedListener(object: TextWatcher{
+                override fun afterTextChanged(s: Editable) {}
+
+                override fun beforeTextChanged(s: CharSequence, start: Int,
+                                               count: Int, after: Int) {
+                }
+
+                override fun onTextChanged(s: CharSequence, start: Int,
+                                           before: Int, count: Int) {
+                    invalidateOptionsMenu()
+                }
+
+            })
+        }
+
+    }
+
+    private fun createNewNote() {
+        DataManager.notes.add(NoteInfo())
+        notePosition = DataManager.notes.lastIndex
     }
 
     private fun displayNote() {
@@ -59,11 +86,18 @@ class MainActivity : AppCompatActivity() {
                 moveNext()
                 true
             }
+            R.id.action_save -> {
+                saveNote()
+                val activityIntent = Intent(this,NoteListActivity::class.java)
+                startActivity(activityIntent)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
     private fun moveNext() {
+        saveNote()
         ++notePosition
         displayNote()
         invalidateOptionsMenu()
@@ -78,6 +112,19 @@ class MainActivity : AppCompatActivity() {
                 menuItem.isEnabled = false
             }
         }
+        val saveMenuItem = menu?.findItem(R.id.action_save)
+        if(notePosition == DataManager.notes.lastIndex){
+            if (saveMenuItem!=null){
+                saveMenuItem.icon = getDrawable(R.drawable.ic_block_white_24dp)
+                saveMenuItem.isEnabled = false
+            }
+        }
+        if(editNoteText.text.isNotEmpty() && editNoteTitle.text.isNotEmpty()){
+            if (saveMenuItem!=null){
+                saveMenuItem.icon = getDrawable(R.drawable.ic_save_black_24dp)
+                saveMenuItem.isEnabled = true
+            }
+        }
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -87,10 +134,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveNote() {
-        val note = DataManager.notes[notePosition]
-        note.title = editNoteTitle.text.toString()
-        note.text = editNoteText.text.toString()
-        note.course = spinnerCourses.selectedItem as CourseInfo
+        if(editNoteText.text.isNotEmpty() && editNoteTitle.text.isNotEmpty()) {
+            val note = DataManager.notes[notePosition]
+            note.title = editNoteTitle.text.toString()
+            note.text = editNoteText.text.toString()
+            note.course = spinnerCourses.selectedItem as CourseInfo
+        }
+        else{
+            DataManager.notes.remove(DataManager.notes.last())
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
